@@ -1,9 +1,9 @@
 import { execSync } from 'child_process'
-import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { writeFileSync } from 'fs'
 import detectPackageManager, {
   type PackageManager,
 } from 'lib/detectPackageManager'
-import path from 'path'
+import readPackageJson from 'lib/readPackageJson'
 import { defaultPrettierrcConfig } from './prettier.constants'
 
 async function handler() {
@@ -45,18 +45,12 @@ function installPrettier(packageManager: PackageManager): void {
 function addPrettierScript(): void {
   console.log('Adding Prettier format script to package.json....')
 
-  const packageJsonPath = path.join(process.cwd(), 'package.json')
+  const { packageJsonPath, packageJsonContent } = readPackageJson()
 
-  if (!existsSync(packageJsonPath)) {
-    throw new Error('package.json not found in the project.')
-  }
+  packageJsonContent.scripts = packageJsonContent.scripts || {}
+  packageJsonContent.scripts['format'] = 'prettier --write .'
 
-  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'))
-
-  packageJson.scripts = packageJson.scripts || {}
-  packageJson.scripts['format'] = 'prettier --write .'
-
-  writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+  writeFileSync(packageJsonPath, JSON.stringify(packageJsonContent, null, 2))
 
   console.log('Running format command...')
   execSync('yarn format')

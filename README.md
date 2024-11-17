@@ -40,5 +40,5 @@ Prompts to user to select the job that they want to run.
 
 - [x] jobs > git
 - [x] jobs > prettier
-- [ ] jobs > vscode
+- [x] jobs > vscode
 - [ ] jobs > tailwind

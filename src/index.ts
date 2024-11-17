@@ -2,6 +2,7 @@
 
 import { select, Separator } from '@inquirer/prompts'
 import { program } from 'commander'
+import format from 'lib/format'
 import { exit } from 'process'
 import type { CommandHandler } from 'types/command'
 import { commands } from './jobs/index.commands.js'
@@ -18,6 +19,10 @@ program.command('exec').action(async () => {
       {
         value: 'prettier',
         description: '.prettierrc, prettier to devDeps, yarn format',
+      },
+      {
+        value: 'vscode',
+        description: '.vscode, organize imports, formatter, ts',
       },
       {
         value: 'husky',
@@ -38,6 +43,7 @@ program.command('exec').action(async () => {
   const choiceHandler = getHandler(choice)
   try {
     await choiceHandler()
+    format()
     exit(0)
   } catch (error) {
     console.error('Job handler failed to run smoothly.')
