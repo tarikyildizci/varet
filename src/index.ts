@@ -3,6 +3,7 @@
 import { ExitPromptError } from '@inquirer/core'
 import { confirm, search } from '@inquirer/prompts'
 import { program } from 'commander'
+import displayLogo from 'lib/displayLogo'
 import format from 'lib/format'
 import fuzzy from 'lib/fuzzy'
 import { exit } from 'process'
@@ -37,6 +38,7 @@ const choices = [
 ]
 
 program.command('exec').action(async () => {
+  displayLogo()
   try {
     const choice = await search({
       message: 'Search for a job to run:',
