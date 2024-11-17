@@ -1,7 +1,7 @@
 import cfonts from 'cfonts'
 
 function displayLogo() {
-  cfonts.say('varet', {
+  return cfonts.render('varet', {
     font: 'simple3d',
     colors: ['red'],
     env: 'node',

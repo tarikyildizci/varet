@@ -1,68 +1,40 @@
 #!/usr/bin/env node
 
-import { ExitPromptError } from '@inquirer/core'
-import { confirm, search } from '@inquirer/prompts'
-import { program } from 'commander'
+import { gitPlugin } from '@varet/core'
+import { Command } from 'commander'
 import displayLogo from 'lib/displayLogo'
-import format from 'lib/format'
-import fuzzy from 'lib/fuzzy'
-import { exit } from 'process'
-import type { CommandHandler } from 'types/command'
-import SkipError from 'types/skipError'
-import { VaretError } from 'types/varetError'
-import { commands } from './jobs/index.commands.js'
+import { insertPlugin } from 'lib/insertPlugin'
+import loadGlobalPlugins from 'lib/loadGlobalPlugins'
 
-const chocies = commands.map((command) => ({
-  value: command.name,
-  description: command.description,
-}))
+const program = new Command()
 
-program.command('exec').action(async () => {
-  displayLogo()
-  try {
-    const choice = await search({
-      message: 'Search for a job to run:',
-      source: (term, _options) => {
-        return term
-          ? fuzzy(chocies, term, ({ value }) => value).map((fuzz) => fuzz.item)
-          : chocies
-      },
+;(async () => {
+  // Load global plugins
+  insertPlugin(program, gitPlugin)
+  await loadGlobalPlugins(program)
+
+  program.addHelpText('beforeAll', (displayLogo() as any)?.string)
+
+  program
+    .command('version')
+    .description('Displays the current version of varet')
+    .action(() => {
+      console.log('0.1.0')
     })
-    const choiceHandler = getHandler(choice)
-    await choiceHandler()
 
-    const shouldFormat = await confirm({
-      message: 'Job ran successfully. Would you like to format?',
-      default: true,
+  program
+    .command('ls')
+    .description('lists all available jobs')
+    .action(() => {
+      console.log('Here are all the jobs you have: ')
+      program.commands
+        .map((c) => ({
+          name: c.name(),
+          description: c.description(),
+        }))
+        .forEach((c) => console.log(`- ${c.name} - ${c.description}`))
     })
-    shouldFormat && format()
 
-    exit(0)
-  } catch (error) {
-    if (error instanceof ExitPromptError) {
-      console.log('Exiting, bye bye!')
-      exit(0)
-    }
-    if (error instanceof SkipError) {
-      console.log('Job partially successfull.')
-      exit(0)
-    }
-    if (error instanceof VaretError) {
-      console.error(error.message)
-      exit(0)
-    }
-    console.error('Job handler failed to run smoothly!')
-    console.error(error)
-    exit(0)
-  }
-})
-
-function getHandler(job: string): CommandHandler {
-  const foundCommand = commands.find((command) => command.name === job)
-  if (foundCommand) {
-    return foundCommand.handler
-  }
-  throw new Error('Unknown Command')
-}
-
-program.parse(process.argv)
+  // Parse CLI commands
+  program.parse(process.argv)
+})()

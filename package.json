@@ -1,13 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/package",
   "name": "varet",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "A CLI tool to generate your defaults in new projects.",
   "repository": "https://github.com/tarikyildizci/varet.git",
   "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "dist/**/*"
+    "dist"
   ],
   "author": {
     "email": "tarikyyildizci@gmail.com",
@@ -27,6 +28,7 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^7.1.0",
+    "@varet/core": "^0.0.7",
     "cfonts": "^3.3.0",
     "commander": "^12.1.0",
     "ora": "^8.1.1"
