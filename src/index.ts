@@ -8,34 +8,14 @@ import format from 'lib/format'
 import fuzzy from 'lib/fuzzy'
 import { exit } from 'process'
 import type { CommandHandler } from 'types/command'
+import SkipError from 'types/skipError'
+import { VaretError } from 'types/varetError'
 import { commands } from './jobs/index.commands.js'
 
-const choices = [
-  {
-    value: 'git',
-    description: 'git init, master branch, gitflow',
-  },
-  {
-    value: 'prettier',
-    description: '.prettierrc, prettier to devDeps, yarn format',
-  },
-  {
-    value: 'vscode',
-    description: '.vscode, organize imports, formatter, ts',
-  },
-  {
-    value: 'husky',
-    description: '.husky, .commitlintrc',
-  },
-  {
-    value: 'tailwind',
-    description: 'tailwind to devDeps, tailwind.config.ts',
-  },
-  {
-    value: 'dotenv',
-    description: 'create .env.example + .env, install dotenv',
-  },
-]
+const chocies = commands.map((command) => ({
+  value: command.name,
+  description: command.description,
+}))
 
 program.command('exec').action(async () => {
   displayLogo()
@@ -44,8 +24,8 @@ program.command('exec').action(async () => {
       message: 'Search for a job to run:',
       source: (term, _options) => {
         return term
-          ? fuzzy(choices, term, ({ value }) => value).map((fuzz) => fuzz.item)
-          : choices
+          ? fuzzy(chocies, term, ({ value }) => value).map((fuzz) => fuzz.item)
+          : chocies
       },
     })
     const choiceHandler = getHandler(choice)
@@ -63,14 +43,24 @@ program.command('exec').action(async () => {
       console.log('Exiting, bye bye!')
       exit(0)
     }
-    console.error('Job handler failed to run smoothly.')
+    if (error instanceof SkipError) {
+      console.log('Job partially successfull.')
+      exit(0)
+    }
+    if (error instanceof VaretError) {
+      console.error(error.message)
+      exit(0)
+    }
+    console.error('Job handler failed to run smoothly!')
+    console.error(error)
     exit(0)
   }
 })
 
 function getHandler(job: string): CommandHandler {
-  if (job in commands) {
-    return commands[job]
+  const foundCommand = commands.find((command) => command.name === job)
+  if (foundCommand) {
+    return foundCommand.handler
   }
   throw new Error('Unknown Command')
 }

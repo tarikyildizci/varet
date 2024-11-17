@@ -4,7 +4,11 @@ import detectPackageManager, {
   type PackageManager,
 } from 'lib/detectPackageManager'
 import readPackageJson from 'lib/readPackageJson'
-import { defaultPrettierrcConfig } from './prettier.constants'
+import ora from 'ora'
+import SkipError from 'types/skipError'
+import { defaultPrettierrcConfig } from './prettier.constant'
+
+const message = ora()
 
 async function handler() {
   createPrettierrc()
@@ -14,11 +18,13 @@ async function handler() {
 }
 
 function createPrettierrc() {
-  console.log('Creating .prettierrc file with sensible defaults.')
+  message.start('Creating .prettierrc file with sensible defaults...')
   execSync(`echo "${defaultPrettierrcConfig}" > .prettierrc`)
+  message.succeed('Created .prettierrc file.')
 }
 
 function installPrettier(packageManager: PackageManager): void {
+  message.start('Finding preferred package manager...')
   let installCommand: string
 
   switch (packageManager) {
@@ -32,18 +38,20 @@ function installPrettier(packageManager: PackageManager): void {
       installCommand = 'pnpm add prettier --save-dev'
       break
     default:
-      throw new Error('Unsupported or unknown package manager.')
+      message.info('Unknown package manager, skipping installation.')
+      throw new SkipError('Unknown package manager, skipping installation.')
   }
 
-  console.log(`Installing Prettier using ${packageManager}...`)
-  execSync(installCommand, {
-    cwd: process.cwd(),
-    stdio: 'inherit',
-  })
+  message.succeed(`Found package manager: ${packageManager}`)
+
+  message.start(`Installing Prettier using ${packageManager}...`)
+
+  execSync(installCommand)
+  message.succeed('Installed prettier as a dev dependency.')
 }
 
 function addPrettierScript(): void {
-  console.log('Adding Prettier format script to package.json....')
+  message.start('Adding format script to package.json...')
 
   const { packageJsonPath, packageJsonContent } = readPackageJson()
 
@@ -51,9 +59,7 @@ function addPrettierScript(): void {
   packageJsonContent.scripts['format'] = 'prettier --write .'
 
   writeFileSync(packageJsonPath, JSON.stringify(packageJsonContent, null, 2))
-
-  console.log('Running format command...')
-  execSync('yarn format')
+  message.succeed('Added format script to package.json.')
 }
 
 export default handler

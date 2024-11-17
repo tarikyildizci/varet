@@ -1,6 +1,6 @@
 import { confirm } from '@inquirer/prompts'
 import { execSync } from 'child_process'
-import { defaultGitIgnore } from './git.constants'
+import { defaultGitIgnore } from './git.constant'
 
 async function handler() {
   const shouldCreateGitIgnore = await confirm({
