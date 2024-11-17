@@ -4,6 +4,6 @@ export const defaultPrettierrcConfig = escapeSpecialChars(`{
   "semi": false,
   "singleQuote": true,
   "trailingComma": "all",
-  "printWidth": 60
+  "printWidth": 80
 }
 `)

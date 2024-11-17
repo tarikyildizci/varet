@@ -6,10 +6,19 @@ import detectPackageManager, {
 import path from 'path'
 import { defaultPrettierrcConfig } from './prettier.constants'
 
-function installPrettier(
-  projectPath: string,
-  packageManager: PackageManager,
-): void {
+async function handler() {
+  createPrettierrc()
+  const packageManager = detectPackageManager(process.cwd())
+  installPrettier(packageManager)
+  addPrettierScript()
+}
+
+function createPrettierrc() {
+  console.log('Creating .prettierrc file with sensible defaults.')
+  execSync(`echo "${defaultPrettierrcConfig}" > .prettierrc`)
+}
+
+function installPrettier(packageManager: PackageManager): void {
   let installCommand: string
 
   switch (packageManager) {
@@ -23,79 +32,34 @@ function installPrettier(
       installCommand = 'pnpm add prettier --save-dev'
       break
     default:
-      throw new Error(
-        'Unsupported or unknown package manager.',
-      )
+      throw new Error('Unsupported or unknown package manager.')
   }
 
-  console.log(
-    `Installing Prettier using ${packageManager}...`,
-  )
+  console.log(`Installing Prettier using ${packageManager}...`)
   execSync(installCommand, {
-    cwd: projectPath,
+    cwd: process.cwd(),
     stdio: 'inherit',
   })
 }
 
-function addPrettierScript(projectPath: string): void {
-  const packageJsonPath = path.join(
-    projectPath,
-    'package.json',
-  )
+function addPrettierScript(): void {
+  console.log('Adding Prettier format script to package.json....')
+
+  const packageJsonPath = path.join(process.cwd(), 'package.json')
 
   if (!existsSync(packageJsonPath)) {
-    throw new Error(
-      'package.json not found in the project.',
-    )
+    throw new Error('package.json not found in the project.')
   }
 
-  const packageJson = JSON.parse(
-    readFileSync(packageJsonPath, 'utf8'),
-  )
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'))
 
   packageJson.scripts = packageJson.scripts || {}
   packageJson.scripts['format'] = 'prettier --write .'
 
-  writeFileSync(
-    packageJsonPath,
-    JSON.stringify(packageJson, null, 2),
-  )
-  console.log(
-    'Added Prettier format script to package.json.',
-  )
+  writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
 
   console.log('Running format command...')
   execSync('yarn format')
-}
-
-function handler() {
-  console.log(
-    'Creating .prettierrc file with recommended defaults.',
-  )
-  execSync(
-    `echo "${defaultPrettierrcConfig}" > .prettierrc`,
-  )
-  const packageManager = detectPackageManager(process.cwd())
-  installPrettier(process.cwd(), packageManager)
-  addPrettierScript(process.cwd())
-  console.log('Success.')
-
-  //   ,
-  //     execCallback(() => {
-  //       console.log("Adding 'prettier' as a dev dependency.")
-  //       const packageManager = detectPackageManager(
-  //         process.cwd(),
-  //       )
-  //       if (packageManager === 'unknown') {
-  //         throw new Error(
-  //           'Cannot detect package manager, try again after generating a lock file.',
-  //         )
-  //       }
-  //       exec(
-  //         `${packageManager} add -D prettier`,
-  //         execCallback(() => console.log('Success.')),
-  //       )
-  //     }),
 }
 
 export default handler

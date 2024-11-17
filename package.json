@@ -19,7 +19,9 @@
     "varet": "./dist/index.js"
   },
   "scripts": {
+    "hak": "node dist/index.js",
     "build": "tsc && tsc-alias",
+    "bhak": "yarn build && yarn hak",
     "format": "prettier --write .",
     "ts": "tsc --noEmit"
   },

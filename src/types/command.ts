@@ -1,2 +1,2 @@
-export type CommandHandler = () => void
+export type CommandHandler = () => Promise<void>
 export type Command = Record<string, CommandHandler>

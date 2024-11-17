@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
-import { program } from 'commander'
 import { select, Separator } from '@inquirer/prompts'
+import { program } from 'commander'
+import { exit } from 'process'
+import type { CommandHandler } from 'types/command'
 import { commands } from './jobs/index.commands.js'
 
-program.command('exec').action(() =>
-  select({
+program.command('exec').action(async () => {
+  const choice = await select({
     message: 'Choose a job to run.',
     choices: [
       new Separator('General'),
@@ -15,8 +17,7 @@ program.command('exec').action(() =>
       },
       {
         value: 'prettier',
-        description:
-          '.prettierrc, prettier to devDeps, yarn format',
+        description: '.prettierrc, prettier to devDeps, yarn format',
       },
       {
         value: 'husky',
@@ -25,24 +26,26 @@ program.command('exec').action(() =>
       new Separator('Frontend'),
       {
         value: 'tailwind',
-        description:
-          'tailwind to devDeps, tailwind.config.ts',
+        description: 'tailwind to devDeps, tailwind.config.ts',
       },
       new Separator('Backend'),
       {
         value: 'dotenv',
-        description:
-          'create .env.example + .env, install dotenv',
+        description: 'create .env.example + .env, install dotenv',
       },
     ],
   })
-    .then((res) => {
-      getHandler(res)()
-    })
-    .catch((err) => console.error(err)),
-)
+  const choiceHandler = getHandler(choice)
+  try {
+    await choiceHandler()
+    exit(0)
+  } catch (error) {
+    console.error('Job handler failed to run smoothly.')
+    exit(0)
+  }
+})
 
-const getHandler = (job: string) => {
+const getHandler = (job: string): CommandHandler => {
   if (job in commands) {
     return commands[job]
   }
